@@ -111,7 +111,7 @@ int main()
 	glBindVertexArray(VAO);
 	
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, curveVer.size() * sizeof(float), curveVer.data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, curveVer.size() * sizeof(float), curveVer.data(), GL_STATIC_DRAW);
 
 	const int COLOR_COMPONENTS = 0;
 	const int VERTEX_COMPONENTS = 3;
