@@ -10,24 +10,17 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+
 #include "Shader.h"
+#include "HilbertCurveGen.h"
 
 using namespace std;
 
-vector<float> verticies =
-{
-	// Triangle 1
-	// positions		// colou
-	-0.5f, -0.5f, 0.0f,	1.0f, 0.0f, 0.0f,
-	0.5f, -0.5f, 0.0f,	0.0f, 1.0f, 0.0f,
-	0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 1.0f,
-
-	// Triangle 2
-	0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 1.0f,
-	-0.5f, 0.5f, 0.0f,	1.0f, 0.0f, 0.0f,
-	0.5f, 0.5f, 0.0f,	0.0f, 1.0f, 0.0f
-};
 glm::mat4 transform(1.0f);
+HilbertCurveGen hbCurve(1);
+vector<float> curveVer;
+bool curveChanged = false;
+bool n_key_held = false;
 
 const int WIDTH = 512;
 const int HEIGHT = 512;
@@ -58,6 +51,15 @@ void processInput(GLFWwindow *window)
 		dx = -speed;
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 		rot = speed;
+	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !n_key_held)
+	{
+		n_key_held = true;
+		hbCurve.increaseLevel();
+		curveVer = hbCurve.getVerticies();
+		curveChanged = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE)
+		n_key_held = false;
 	
 	transform = glm::translate(transform, glm::vec3(dx, dy, 0.0f));
 	transform = glm::rotate(transform, rot, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -95,7 +97,13 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	
 	Shader shader("rsc/vertex.glsl", "rsc/fragment.glsl");
-	HilbertCurveGen hbCurve(1);
+	//HilbertCurveGen hbCurve(1);
+	curveVer = hbCurve.getVerticies();
+
+	/*for (float x : curveVer)
+	{
+		cout << x << endl;
+	}*/
 
 	GLuint VAO, VBO;
 	glGenBuffers(1, &VBO); // gen 1 buffer and store id in VBO
@@ -103,9 +111,9 @@ int main()
 	glBindVertexArray(VAO);
 	
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, verticies.size() * sizeof(float), verticies.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, curveVer.size() * sizeof(float), curveVer.data(), GL_DYNAMIC_DRAW);
 
-	const int COLOR_COMPONENTS = 3;
+	const int COLOR_COMPONENTS = 0;
 	const int VERTEX_COMPONENTS = 3;
 	const int COMPONENTS_PER_VERTEX = COLOR_COMPONENTS + VERTEX_COMPONENTS;
 	const int STRIDE = COMPONENTS_PER_VERTEX * sizeof(float);
@@ -113,26 +121,26 @@ int main()
 	glVertexAttribPointer(0, VERTEX_COMPONENTS, GL_FLOAT, GL_FALSE, STRIDE, (void*)0);
 	glEnableVertexAttribArray(0);
 	//color attributes
-	glVertexAttribPointer(1, COLOR_COMPONENTS, GL_FLOAT, GL_FALSE, STRIDE, (void*)(VERTEX_COMPONENTS * sizeof(float)));
-	glEnableVertexAttribArray(1);
+	//glVertexAttribPointer(1, COLOR_COMPONENTS, GL_FLOAT, GL_FALSE, STRIDE, (void*)(VERTEX_COMPONENTS * sizeof(float)));
+	//glEnableVertexAttribArray(1);
 
 	// unbind VBO and VAO
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	
+	glm::mat4 trans(1.0f);
+	trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 	while (!glfwWindowShouldClose(window))
 	{
 		processInput(window);
-		glm::vec4 vec(2.0f, 3.0f, 5.0f, 1.0f);
 		
 		glClearColor(0.2f, 0.5f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(shader.getProgramID());
 		GLint transformLoc = glGetUniformLocation(shader.getProgramID(), "transform");
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 		
 		/*// set color of the triangle by uniform
 		float time = glfwGetTime();
@@ -145,11 +153,15 @@ int main()
 		glBindVertexArray(VAO);
 		
 		//NO NEED TO TRANSFORM HERE, DO IT IN SHADER INSTEAD
-		//glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		//overwrite the exising buffer instead of allocating new memory
-		//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * verticies.size(), verticies.data());
+		//create new buffer data
+		if (curveChanged)
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, VBO);
+			glBufferData(GL_ARRAY_BUFFER, curveVer.size() * sizeof(float), curveVer.data(), GL_DYNAMIC_DRAW);
+			curveChanged = false;	
+		}
 		
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDrawArrays(GL_LINE_STRIP, 0, curveVer.size() / 3);
 
 		glBindVertexArray(0);
 
