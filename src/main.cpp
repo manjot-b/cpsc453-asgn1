@@ -129,7 +129,7 @@ int main()
 	glBindVertexArray(0);
 
 	glm::mat4 trans(1.0f);
-	trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	trans = glm::rotate(trans, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -139,8 +139,8 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(shader.getProgramID());
-		GLint transformLoc = glGetUniformLocation(shader.getProgramID(), "transform");
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+		//GLint transformLoc = glGetUniformLocation(shader.getProgramID(), "transform");
+		//glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 		
 		/*// set color of the triangle by uniform
 		float time = glfwGetTime();
@@ -162,6 +162,7 @@ int main()
 		}
 		
 		glDrawArrays(GL_LINE_STRIP, 0, curveVer.size() / 3);
+		//glDrawArrays(GL_POINTS, 0, curveVer.size() / 3);
 
 		glBindVertexArray(0);
 

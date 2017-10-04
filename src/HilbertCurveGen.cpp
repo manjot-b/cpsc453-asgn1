@@ -1,15 +1,55 @@
 #include "HilbertCurveGen.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
 
 using namespace glm;
 using namespace std;
 
-HilbertCurveGen::HilbertCurveGen(int _level) :level(_level) 
+HilbertCurveGen::HilbertCurveGen(int _level) :level(_level) , lowerLeftTrans(1.0f), lowerRightTrans(1.0f),
+                upperLeftTrans(1.0f), upperRightTrans(1.0f)
 {
-    hilbert(-1.0f, -1.0f, 2.0f, 0.0f, 0.0f, 2.0f, level);
+    verticies = 
+    {
+        vec4(-.95f, -.95f, 0.0f, 1.0f),
+        vec4(-.95f, .95f, 0.0f, 1.0f),
+        vec4(.95f, .95f, 0.0f, 1.0f),
+        vec4(.95f, -.95f, 0.0f, 1.0f)
+    };
+    //lowerLeftTrans = vec3(1.0f);
+    //lowerRight = vec3(1.0f);
+    //upperLeft = vec3(1.0f);
+    //upperRight = vec3(1.0f);
+
+    float yAxisFlipArray[16] = {
+        -1.0f, 0.0f, 0.0f, 0.0f,
+         0.0f, 1.0f, 0.0f, 0.0f,
+         0.0f, 0.0f, 1.0f, 0.0f,
+         0.0f, 0.0f, 0.0f, 1.0f
+    };
+    mat4 yAxisFlip = glm::make_mat4(yAxisFlipArray);
+
+    lowerLeftTrans = translate(lowerLeftTrans, vec3(-.5f, -.5f, 0.0f));    
+    lowerLeftTrans = rotate(lowerLeftTrans, radians(-90.0f), vec3(0.0f, 0.0f, 1.0f));
+    lowerLeftTrans = lowerLeftTrans * yAxisFlip;
+    lowerLeftTrans = scale(lowerLeftTrans, vec3(.25f, .25f, .25f));
+   
+    upperLeftTrans = translate(upperLeftTrans, vec3(-.5f, .5f, 0.0f));    
+    //upperLeftTrans = rotate(upperLeftTrans, radians(180.0f), vec3(0.0f, 0.0f, 1.0f));
+    upperLeftTrans = scale(upperLeftTrans, vec3(.25f, .25f, .25f));
+ 
+    upperRightTrans = translate(upperRightTrans, vec3(.5f, .5f, 0.0f));    
+    //upperRightTrans = rotate(upperRightTrans, radians(-180.0f), vec3(0.0f, 0.0f, 1.0f));
+    upperRightTrans = scale(upperRightTrans, vec3(.25f, .25f, .25f));
+ 
+    lowerRightTrans = translate(lowerRightTrans, vec3(.5f, -.5f, 0.0f));    
+    lowerRightTrans = rotate(lowerRightTrans, radians(90.0f), vec3(0.0f, 0.0f, 1.0f));
+    lowerRightTrans = lowerRightTrans * yAxisFlip;    
+    lowerRightTrans = scale(lowerRightTrans, vec3(.25f, .25f, .25f));
+ 
+    //hilbert(verticies, level);
 }
 
 vector<float> HilbertCurveGen::getVerticies()
@@ -26,26 +66,36 @@ vector<float> HilbertCurveGen::getVerticies()
 
 void HilbertCurveGen::increaseLevel()
 {
-    verticies.clear();
-    hilbert(-1.0f, -1.0f, 2.0f, 0.0f, 0.0f, 2.0f, ++level);
+    //verticies.clear();
+    hilbert(verticies, 1);
+    level++;
 }
 
 /* x0 and y0 are the coordinates of the bottom left corner */
 /* xis & xjs are the i & j components of the unit x vector this frame */
 /* similarly yis and yjs */
-void HilbertCurveGen::hilbert(float x0, float y0, float xis, float xjs, float yis, float yjs, int n)
+void HilbertCurveGen::hilbert(vector<vec4> &curve,  int n)
 {
-    if (n<= 0)
-    {
-        float x = x0+(xis+yis)/2;
-        float y = y0+(xjs+yjs)/2; 
-        verticies.push_back(vec4(x, y, 0.0f, 1.0f));
-    }    
+    if (n<= 0) { return; }    
     else
     {
-        hilbert(x0, y0, yis/2, yjs/2, xis/2, xjs/2, n-1);
-        hilbert(x0+xis/2, y0+xjs/2 ,xis/2, xjs/2, yis/2, yjs/2, n-1);
-        hilbert(x0+xis/2+yis/2, y0+xjs/2+yjs/2, xis/2, xjs/2, yis/2, yjs/2,n-1);
-        hilbert(x0+xis/2+yis, y0+xjs/2+yjs, -yis/2,-yjs/2, -xis/2, -xjs/2,n-1);
+        vector<vec4> lowerLeftCurve;
+        vector<vec4> upperLeftCurve;
+        vector<vec4> upperRightCurve;
+        vector<vec4> lowerRightCurve;        
+        for (const auto &v : curve)
+        {
+            lowerLeftCurve.push_back(lowerLeftTrans * v);
+            upperLeftCurve.push_back(upperLeftTrans * v);
+            upperRightCurve.push_back(upperRightTrans * v);
+            lowerRightCurve.push_back(lowerRightTrans * v);
+        }
+        curve.clear();
+        curve.insert(curve.end(), lowerLeftCurve.begin(), lowerLeftCurve.end());
+        curve.insert(curve.end(), upperLeftCurve.begin(), upperLeftCurve.end());
+        curve.insert(curve.end(), upperRightCurve.begin(), upperRightCurve.end());
+        curve.insert(curve.end(), lowerRightCurve.begin(), lowerRightCurve.end());
+        hilbert(curve, n-1);
+        
     }
 }

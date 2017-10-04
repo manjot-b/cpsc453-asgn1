@@ -14,8 +14,12 @@ class HilbertCurveGen
     private:
         std::vector<glm::vec4> verticies;
         void calcCurve(int level);
-        void hilbert(float x0, float y0, float xis, float xjs, float yis, float yjs, int n);
+        void hilbert(std::vector<glm::vec4> &verticies, int n);
         int level;
+        glm::mat4 lowerLeftTrans;
+        glm::mat4 upperLeftTrans;
+        glm::mat4 upperRightTrans;
+        glm::mat4 lowerRightTrans;
         
 };
 
