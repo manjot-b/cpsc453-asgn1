@@ -16,7 +16,10 @@
 
 using namespace std;
 
-HilbertCurveGen hbCurve(1);
+const int WIDTH = 512;
+const int HEIGHT = 512;
+
+HilbertCurveGen hbCurve(1, WIDTH, HEIGHT);
 vector<float> curveVer;
 bool curveChanged = false;
 bool n_key_held = false;
@@ -24,12 +27,10 @@ bool b_key_held = false;
 bool space_key_held = false;
 GLenum primitiveMode = GL_LINE_STRIP;
 
-const int WIDTH = 512;
-const int HEIGHT = 512;
-
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+	hbCurve.setMaxLevel(width, height);
 }
 
 void processInput(GLFWwindow *window)

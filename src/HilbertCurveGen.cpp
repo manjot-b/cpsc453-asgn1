@@ -8,7 +8,7 @@
 using namespace glm;
 using namespace std;
 
-HilbertCurveGen::HilbertCurveGen(int _level) :level(_level) , lowerLeftTrans(1.0f), lowerRightTrans(1.0f),
+HilbertCurveGen::HilbertCurveGen(int _level, int width, int height) :level(_level) , lowerLeftTrans(1.0f), lowerRightTrans(1.0f),
                 upperLeftTrans(1.0f), upperRightTrans(1.0f)
 {
     // verticies for level 1
@@ -39,17 +39,23 @@ HilbertCurveGen::HilbertCurveGen(int _level) :level(_level) , lowerLeftTrans(1.0
     lowerRightTrans = rotate(lowerRightTrans, radians(180.0f), vec3(0.0f, 1.0f, 0.0f)); //y-axis flipe    
     lowerRightTrans = scale(lowerRightTrans, vec3(scalarFl, scalarFl, scalarFl));
  
+    setMaxLevel(width, height);
     hilbert(verticies, level-1);
 }
 
 vector<float> HilbertCurveGen::getPointVerticies()
 {
     vector<float> vert;
+    cout << "LEVEL: " << level << endl;  
+    int i = 1;  
     for (const auto & vec : verticies)
     {
         vert.push_back(vec.x);
         vert.push_back(vec.y);
         vert.push_back(vec.z);
+        //cout <<"POINT: " << i 
+         //   << " X: " << vec.x << " Y: " << vec.y << endl;
+        i++; 
     }
     return vert;
 }
@@ -58,32 +64,48 @@ vector<float> HilbertCurveGen::getTriangleVerticies()
 {
     vector<float> vert;
     vec3 xAxis(1.0f, 0.0f, 0.0f);
-    float offSet = 0.01f;
+    float offSet = 0.02f;
     float reUsedX;
     float reUsedY;
     float reUsedZ;
 
+    // will return a triangles that form rectangles
+    // such that the hilbert line passes through the
+    // center of the rectangle
     for (int i = 0; i < verticies.size() - 1; i++)
     {
         vec3 prevDist;
+        int direction;  // -1 means left, 1 means right
+
         if (i > 0)
         {
-            // coords from point-based hilbert curve
-            vert.push_back(verticies[i].x);
-            vert.push_back(verticies[i].y);
-            vert.push_back(verticies[i].z);
-
             prevDist = vec3(verticies[i] - verticies[i-1]);
             if (isOrthogonal(prevDist, xAxis))
             {
-                vert.push_back(verticies[i].x);
+                direction = (verticies[i].x - verticies[i-1].x) 
+                / abs(verticies[i].x - verticies[i-1].x);
+
+                vert.push_back(verticies[i].x + offSet * direction);
                 vert.push_back(verticies[i].y + offSet);
+                vert.push_back(verticies[i].z);
+
+                 // coords from point-based hilbert curve
+                vert.push_back(verticies[i].x + offSet * direction);
+                vert.push_back(verticies[i].y - offSet);
                 vert.push_back(verticies[i].z);
             }
             else 
             {
+                direction = (verticies[i].y - verticies[i-1].y) 
+                / abs(verticies[i].y - verticies[i-1].y);
+
+                 // coords from point-based hilbert curve
                 vert.push_back(verticies[i].x + offSet);
-                vert.push_back(verticies[i].y);
+                vert.push_back(verticies[i].y + offSet * direction);
+                vert.push_back(verticies[i].z);
+
+                vert.push_back(verticies[i].x - offSet);
+                vert.push_back(verticies[i].y + offSet * direction);
                 vert.push_back(verticies[i].z);
             }
 
@@ -94,43 +116,68 @@ vector<float> HilbertCurveGen::getTriangleVerticies()
                         
         }
 
-        // coords from point-based hilbert curve
-        vert.push_back(verticies[i].x);
-        vert.push_back(verticies[i].y);
-        vert.push_back(verticies[i].z);
+       
 
         // check to see if the line is horizontal or vertical
         // so we know where to put the trianlgle verticies
         vec3 nextDist = vec3(verticies[i]) - vec3(verticies[i+1]);
         if (isOrthogonal(nextDist, xAxis))
         {
+            direction = (verticies[i+1].x - verticies[i].x) 
+                    / abs(verticies[i+1].x - verticies[i].x);
+            
             reUsedX = verticies[i].x;
-            reUsedY = verticies[i].y + offSet;
+            reUsedY = verticies[i].y - offSet;
             reUsedZ = verticies[i].z;
+
+            // coords from point-based hilbert curve
             vert.push_back(verticies[i].x);
             vert.push_back(verticies[i].y + offSet);
             vert.push_back(verticies[i].z);
+            
+            vert.push_back(verticies[i].x);
+            vert.push_back(verticies[i].y - offSet);
+            vert.push_back(verticies[i].z);
+
+            // coords of next point to complete the triangle
+            vert.push_back(verticies[i+1].x + offSet * direction);
+            vert.push_back(verticies[i+1].y + offSet);
+            vert.push_back(verticies[i+1].z);
         }
         else 
         {
-            reUsedX = verticies[i].x + offSet;
+            direction = (verticies[i+1].y - verticies[i].y) 
+            / abs(verticies[i+1].y - verticies[i].y);
+
+            reUsedX = verticies[i].x - offSet;
             reUsedY = verticies[i].y;
             reUsedZ = verticies[i].z;
+
             vert.push_back(verticies[i].x + offSet);
             vert.push_back(verticies[i].y);
             vert.push_back(verticies[i].z);
+
+            vert.push_back(verticies[i].x - offSet);
+            vert.push_back(verticies[i].y);
+            vert.push_back(verticies[i].z);
+        
+            // coords of next point to complete the triangle
+            vert.push_back(verticies[i+1].x + offSet);
+            vert.push_back(verticies[i+1].y + offSet * direction);
+            vert.push_back(verticies[i+1].z);
         }
 
-        // coords of next point to complete the triangle
-        vert.push_back(verticies[i+1].x);
-        vert.push_back(verticies[i+1].y);
-        vert.push_back(verticies[i+1].z);
     }
     return vert;
 }
 
 void HilbertCurveGen::increaseLevel()
 {
+    if (level >= maxLevel)
+    {
+        cout << "MAX LEVEL " << maxLevel << " REACHED!" << endl;
+        return;
+    }
     hilbert(verticies, 1);
     level++;
 }
@@ -185,4 +232,10 @@ void HilbertCurveGen::hilbert(vector<vec4> &curve,  int n)
 bool HilbertCurveGen::isOrthogonal(vec3 x, vec3 y)
 {
     return dot(x, y);
+}
+
+void HilbertCurveGen::setMaxLevel(int width, int height)
+{
+    float area = width * height;
+    maxLevel = (1 / 2.0f) * (log(area) / log(2));
 }

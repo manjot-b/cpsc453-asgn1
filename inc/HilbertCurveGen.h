@@ -8,13 +8,15 @@
 class HilbertCurveGen
 {
     public: 
-        HilbertCurveGen(int level);
+        HilbertCurveGen(int level, int width, int height);
         std::vector<float> getPointVerticies();
         std::vector<float> getTriangleVerticies();
         void increaseLevel();
         void decreaseLevel();
+        void setMaxLevel(int width, int height);
     private:
         int level;        
+        int maxLevel;
         std::vector<glm::vec4> verticies;
         glm::mat4 lowerLeftTrans;
         glm::mat4 upperLeftTrans;
