@@ -16,11 +16,11 @@
 
 using namespace std;
 
-glm::mat4 transform(1.0f);
 HilbertCurveGen hbCurve(1);
 vector<float> curveVer;
 bool curveChanged = false;
 bool n_key_held = false;
+bool b_key_held = false;
 
 const int WIDTH = 512;
 const int HEIGHT = 512;
@@ -36,21 +36,7 @@ void processInput(GLFWwindow *window)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
-	float dy = 0;
-	float dx = 0;
-	float rot = 0;
-	float speed = 0.002f;
 	
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-		dy = speed;
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-		dy = -speed;
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-		dx = speed;
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-		dx = -speed;
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		rot = speed;
 	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !n_key_held)
 	{
 		n_key_held = true;
@@ -60,14 +46,17 @@ void processInput(GLFWwindow *window)
 	}
 	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE)
 		n_key_held = false;
-	
-	transform = glm::translate(transform, glm::vec3(dx, dy, 0.0f));
-	transform = glm::rotate(transform, rot, glm::vec3(0.0f, 0.0f, 1.0f));
-	/*for (int i = 0; i < verticies.size(); i += 6)
+
+	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !b_key_held)
 	{
-		verticies[i] += dx;		//x-coord
-		verticies[i+1] += dy;	//y-coord of each point
-	}*/
+		b_key_held = true;
+		hbCurve.decreaseLevel();
+		curveVer = hbCurve.getVerticies();
+		curveChanged = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
+		b_key_held = false;
+	
 }
 
 int main()

@@ -11,6 +11,7 @@ class HilbertCurveGen
         HilbertCurveGen(int level);
         std::vector<float> getVerticies();
         void increaseLevel();
+        void decreaseLevel();
     private:
         std::vector<glm::vec4> verticies;
         void calcCurve(int level);

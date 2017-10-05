@@ -13,10 +13,10 @@ HilbertCurveGen::HilbertCurveGen(int _level) :level(_level) , lowerLeftTrans(1.0
 {
     verticies = 
     {
-        vec4(-.95f, -.95f, 0.0f, 1.0f),
-        vec4(-.95f, .95f, 0.0f, 1.0f),
-        vec4(.95f, .95f, 0.0f, 1.0f),
-        vec4(.95f, -.95f, 0.0f, 1.0f)
+        vec4(-.5f, -.5f, 0.0f, 1.0f),
+        vec4(-.5f, .5f, 0.0f, 1.0f),
+        vec4(.5f, .5f, 0.0f, 1.0f),
+        vec4(.5f, -.5f, 0.0f, 1.0f)
     };
     //lowerLeftTrans = vec3(1.0f);
     //lowerRight = vec3(1.0f);
@@ -30,24 +30,25 @@ HilbertCurveGen::HilbertCurveGen(int _level) :level(_level) , lowerLeftTrans(1.0
          0.0f, 0.0f, 0.0f, 1.0f
     };
     mat4 yAxisFlip = glm::make_mat4(yAxisFlipArray);
-
-    lowerLeftTrans = translate(lowerLeftTrans, vec3(-.5f, -.5f, 0.0f));    
+    float scalarFl = .5f;
+    float translateFl = .5f;
+    lowerLeftTrans = translate(lowerLeftTrans, vec3(-translateFl, -translateFl, 0.0f));    
     lowerLeftTrans = rotate(lowerLeftTrans, radians(-90.0f), vec3(0.0f, 0.0f, 1.0f));
     lowerLeftTrans = lowerLeftTrans * yAxisFlip;
-    lowerLeftTrans = scale(lowerLeftTrans, vec3(.25f, .25f, .25f));
+    lowerLeftTrans = scale(lowerLeftTrans, vec3(scalarFl, scalarFl, scalarFl));
    
-    upperLeftTrans = translate(upperLeftTrans, vec3(-.5f, .5f, 0.0f));    
+    upperLeftTrans = translate(upperLeftTrans, vec3(-translateFl, translateFl, 0.0f));    
     //upperLeftTrans = rotate(upperLeftTrans, radians(180.0f), vec3(0.0f, 0.0f, 1.0f));
-    upperLeftTrans = scale(upperLeftTrans, vec3(.25f, .25f, .25f));
+    upperLeftTrans = scale(upperLeftTrans, vec3(scalarFl, scalarFl, scalarFl));
  
-    upperRightTrans = translate(upperRightTrans, vec3(.5f, .5f, 0.0f));    
+    upperRightTrans = translate(upperRightTrans, vec3(translateFl, translateFl, 0.0f));    
     //upperRightTrans = rotate(upperRightTrans, radians(-180.0f), vec3(0.0f, 0.0f, 1.0f));
-    upperRightTrans = scale(upperRightTrans, vec3(.25f, .25f, .25f));
+    upperRightTrans = scale(upperRightTrans, vec3(scalarFl, scalarFl, scalarFl));
  
-    lowerRightTrans = translate(lowerRightTrans, vec3(.5f, -.5f, 0.0f));    
+    lowerRightTrans = translate(lowerRightTrans, vec3(translateFl, -translateFl, 0.0f));    
     lowerRightTrans = rotate(lowerRightTrans, radians(90.0f), vec3(0.0f, 0.0f, 1.0f));
     lowerRightTrans = lowerRightTrans * yAxisFlip;    
-    lowerRightTrans = scale(lowerRightTrans, vec3(.25f, .25f, .25f));
+    lowerRightTrans = scale(lowerRightTrans, vec3(scalarFl, scalarFl, scalarFl));
  
     //hilbert(verticies, level);
 }
@@ -66,9 +67,22 @@ vector<float> HilbertCurveGen::getVerticies()
 
 void HilbertCurveGen::increaseLevel()
 {
-    //verticies.clear();
     hilbert(verticies, 1);
     level++;
+}
+
+void HilbertCurveGen::decreaseLevel()
+{
+    if (level <= 1) return;
+    verticies = 
+    {
+        vec4(-.5f, -.5f, 0.0f, 1.0f),
+        vec4(-.5f, .5f, 0.0f, 1.0f),
+        vec4(.5f, .5f, 0.0f, 1.0f),
+        vec4(.5f, -.5f, 0.0f, 1.0f)
+    };
+    --level;
+    hilbert(verticies, level-1);
 }
 
 /* x0 and y0 are the coordinates of the bottom left corner */
