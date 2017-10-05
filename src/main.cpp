@@ -86,13 +86,7 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	
 	Shader shader("rsc/vertex.glsl", "rsc/fragment.glsl");
-	//HilbertCurveGen hbCurve(1);
 	curveVer = hbCurve.getVerticies();
-
-	/*for (float x : curveVer)
-	{
-		cout << x << endl;
-	}*/
 
 	GLuint VAO, VBO;
 	glGenBuffers(1, &VBO); // gen 1 buffer and store id in VBO
@@ -117,36 +111,22 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	glm::mat4 trans(1.0f);
-	trans = glm::rotate(trans, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
 	while (!glfwWindowShouldClose(window))
 	{
 		processInput(window);
 		
-		glClearColor(0.2f, 0.5f, 0.3f, 1.0f);
+		glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(shader.getProgramID());
-		//GLint transformLoc = glGetUniformLocation(shader.getProgramID(), "transform");
-		//glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-		
-		/*// set color of the triangle by uniform
-		float time = glfwGetTime();
-		float blueValue = sin(time / 2.0f + 0.5f);
-		GLint vertexColorLocation = glGetUniformLocation(shaderProgram, "uColor");
-		glUniform4f(vertexColorLocation, 0.0f, 0.0f, blueValue, 1.0f);
-		*/
-
 		// update the verticies of the triangles
 		glBindVertexArray(VAO);
 		
-		//NO NEED TO TRANSFORM HERE, DO IT IN SHADER INSTEAD
 		//create new buffer data
 		if (curveChanged)
 		{
 			glBindBuffer(GL_ARRAY_BUFFER, VBO);
-			glBufferData(GL_ARRAY_BUFFER, curveVer.size() * sizeof(float), curveVer.data(), GL_DYNAMIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, curveVer.size() * sizeof(float), curveVer.data(), GL_STATIC_DRAW);
 			curveChanged = false;	
 		}
 		

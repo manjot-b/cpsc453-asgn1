@@ -5,5 +5,5 @@ uniform vec4 uColor;			// used for input from program (CPU)
 
 void main()
 {
-	FragColor = vertexColor;
+	FragColor = vec4(0.75, 0.75, 0.75, 1.0);
 }
