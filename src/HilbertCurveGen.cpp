@@ -42,7 +42,7 @@ HilbertCurveGen::HilbertCurveGen(int _level) :level(_level) , lowerLeftTrans(1.0
     hilbert(verticies, level-1);
 }
 
-vector<float> HilbertCurveGen::getVerticies()
+vector<float> HilbertCurveGen::getPointVerticies()
 {
     vector<float> vert;
     for (const auto & vec : verticies)
@@ -50,6 +50,81 @@ vector<float> HilbertCurveGen::getVerticies()
         vert.push_back(vec.x);
         vert.push_back(vec.y);
         vert.push_back(vec.z);
+    }
+    return vert;
+}
+
+vector<float> HilbertCurveGen::getTriangleVerticies()
+{
+    vector<float> vert;
+    vec3 xAxis(1.0f, 0.0f, 0.0f);
+    float offSet = 0.01f;
+    float reUsedX;
+    float reUsedY;
+    float reUsedZ;
+
+    for (int i = 0; i < verticies.size() - 1; i++)
+    {
+        vec3 prevDist;
+        if (i > 0)
+        {
+            // coords from point-based hilbert curve
+            vert.push_back(verticies[i].x);
+            vert.push_back(verticies[i].y);
+            vert.push_back(verticies[i].z);
+
+            prevDist = vec3(verticies[i] - verticies[i-1]);
+            if (isOrthogonal(prevDist, xAxis))
+            {
+                vert.push_back(verticies[i].x);
+                vert.push_back(verticies[i].y + offSet);
+                vert.push_back(verticies[i].z);
+            }
+            else 
+            {
+                vert.push_back(verticies[i].x + offSet);
+                vert.push_back(verticies[i].y);
+                vert.push_back(verticies[i].z);
+            }
+
+            // 3rd point to complete the traingle and makes a rectangle
+            vert.push_back(reUsedX);
+            vert.push_back(reUsedY);
+            vert.push_back(reUsedZ);
+                        
+        }
+
+        // coords from point-based hilbert curve
+        vert.push_back(verticies[i].x);
+        vert.push_back(verticies[i].y);
+        vert.push_back(verticies[i].z);
+
+        // check to see if the line is horizontal or vertical
+        // so we know where to put the trianlgle verticies
+        vec3 nextDist = vec3(verticies[i]) - vec3(verticies[i+1]);
+        if (isOrthogonal(nextDist, xAxis))
+        {
+            reUsedX = verticies[i].x;
+            reUsedY = verticies[i].y + offSet;
+            reUsedZ = verticies[i].z;
+            vert.push_back(verticies[i].x);
+            vert.push_back(verticies[i].y + offSet);
+            vert.push_back(verticies[i].z);
+        }
+        else 
+        {
+            reUsedX = verticies[i].x + offSet;
+            reUsedY = verticies[i].y;
+            reUsedZ = verticies[i].z;
+            vert.push_back(verticies[i].x + offSet);
+            vert.push_back(verticies[i].y);
+            vert.push_back(verticies[i].z);
+        }
+
+        // coords of next point to complete the triangle
+        vert.push_back(verticies[i+1].x);
+        vert.push_back(verticies[i+1].y);
+        vert.push_back(verticies[i+1].z);
     }
     return vert;
 }
@@ -105,4 +180,9 @@ void HilbertCurveGen::hilbert(vector<vec4> &curve,  int n)
         hilbert(curve, n-1);
         
     }
+}
+
+bool HilbertCurveGen::isOrthogonal(vec3 x, vec3 y)
+{
+    return dot(x, y);
 }

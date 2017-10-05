@@ -21,6 +21,8 @@ vector<float> curveVer;
 bool curveChanged = false;
 bool n_key_held = false;
 bool b_key_held = false;
+bool space_key_held = false;
+GLenum primitiveMode = GL_LINE_STRIP;
 
 const int WIDTH = 512;
 const int HEIGHT = 512;
@@ -41,7 +43,13 @@ void processInput(GLFWwindow *window)
 	{
 		n_key_held = true;
 		hbCurve.increaseLevel();
-		curveVer = hbCurve.getVerticies();
+		switch(primitiveMode)
+		{
+			case GL_LINE_STRIP:
+				curveVer = hbCurve.getPointVerticies(); break;
+			case GL_TRIANGLES:
+				curveVer = hbCurve.getTriangleVerticies(); break;	
+		}
 		curveChanged = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE)
@@ -51,12 +59,38 @@ void processInput(GLFWwindow *window)
 	{
 		b_key_held = true;
 		hbCurve.decreaseLevel();
-		curveVer = hbCurve.getVerticies();
+		switch(primitiveMode)
+		{
+			case GL_LINE_STRIP:
+				curveVer = hbCurve.getPointVerticies(); break;
+			case GL_TRIANGLES:
+				curveVer = hbCurve.getTriangleVerticies(); break;	
+		}
 		curveChanged = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
 		b_key_held = false;
 	
+	// switch modes	
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !space_key_held)
+	{
+		space_key_held = true;
+		switch(primitiveMode)
+		{
+			case GL_LINE_STRIP:
+				primitiveMode = GL_TRIANGLES;
+				curveVer = hbCurve.getTriangleVerticies(); 
+				break;
+			case GL_TRIANGLES:
+				primitiveMode = GL_LINE_STRIP;
+				curveVer = hbCurve.getPointVerticies(); 
+				break;	
+		}
+		curveChanged = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)	
+		space_key_held = false;
+
 }
 
 int main()
@@ -86,7 +120,7 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	
 	Shader shader("rsc/vertex.glsl", "rsc/fragment.glsl");
-	curveVer = hbCurve.getVerticies();
+	curveVer = hbCurve.getPointVerticies();
 
 	GLuint VAO, VBO;
 	glGenBuffers(1, &VBO); // gen 1 buffer and store id in VBO
@@ -130,7 +164,7 @@ int main()
 			curveChanged = false;	
 		}
 		
-		glDrawArrays(GL_LINE_STRIP, 0, curveVer.size() / 3);
+		glDrawArrays(primitiveMode, 0, curveVer.size() / 3);
 		//glDrawArrays(GL_POINTS, 0, curveVer.size() / 3);
 
 		glBindVertexArray(0);

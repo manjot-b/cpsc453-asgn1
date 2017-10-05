@@ -9,18 +9,22 @@ class HilbertCurveGen
 {
     public: 
         HilbertCurveGen(int level);
-        std::vector<float> getVerticies();
+        std::vector<float> getPointVerticies();
+        std::vector<float> getTriangleVerticies();
         void increaseLevel();
         void decreaseLevel();
     private:
+        int level;        
         std::vector<glm::vec4> verticies;
-        void calcCurve(int level);
-        void hilbert(std::vector<glm::vec4> &verticies, int n);
-        int level;
         glm::mat4 lowerLeftTrans;
         glm::mat4 upperLeftTrans;
         glm::mat4 upperRightTrans;
         glm::mat4 lowerRightTrans;
+        
+        void calcCurve(int level);
+        void hilbert(std::vector<glm::vec4> &verticies, int n);
+        bool isOrthogonal(glm::vec3 x, glm::vec3 y);
+
         
 };
 
