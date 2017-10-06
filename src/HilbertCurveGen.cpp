@@ -4,6 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
+#include <iomanip>
 
 using namespace glm;
 using namespace std;
@@ -75,37 +76,37 @@ vector<float> HilbertCurveGen::getTriangleVerticies()
     for (int i = 0; i < verticies.size() - 1; i++)
     {
         vec3 prevDist;
-        int direction;  // -1 means left, 1 means right
+        int direction;  // -1 means left/down, +1 means right/up
 
         if (i > 0)
         {
             prevDist = vec3(verticies[i] - verticies[i-1]);
             if (isOrthogonal(prevDist, xAxis))
             {
-                direction = (verticies[i].x - verticies[i-1].x) 
-                / abs(verticies[i].x - verticies[i-1].x);
-
-                vert.push_back(verticies[i].x + offSet * direction);
-                vert.push_back(verticies[i].y + offSet);
-                vert.push_back(verticies[i].z);
-
-                 // coords from point-based hilbert curve
-                vert.push_back(verticies[i].x + offSet * direction);
-                vert.push_back(verticies[i].y - offSet);
-                vert.push_back(verticies[i].z);
-            }
-            else 
-            {
                 direction = (verticies[i].y - verticies[i-1].y) 
                 / abs(verticies[i].y - verticies[i-1].y);
 
-                 // coords from point-based hilbert curve
                 vert.push_back(verticies[i].x + offSet);
                 vert.push_back(verticies[i].y + offSet * direction);
                 vert.push_back(verticies[i].z);
 
+                 // coords from point-based hilbert curve
                 vert.push_back(verticies[i].x - offSet);
                 vert.push_back(verticies[i].y + offSet * direction);
+                vert.push_back(verticies[i].z);
+            }
+            else // is parallel to x-axis
+            {
+                direction = (verticies[i].x - verticies[i-1].x) 
+                / abs(verticies[i].x - verticies[i-1].x);
+
+                 // coords from point-based hilbert curve
+                vert.push_back(verticies[i].x + offSet * direction);
+                vert.push_back(verticies[i].y + offSet);
+                vert.push_back(verticies[i].z);
+
+                vert.push_back(verticies[i].x + offSet * direction);
+                vert.push_back(verticies[i].y - offSet);
                 vert.push_back(verticies[i].z);
             }
 
@@ -120,53 +121,105 @@ vector<float> HilbertCurveGen::getTriangleVerticies()
 
         // check to see if the line is horizontal or vertical
         // so we know where to put the trianlgle verticies
-        vec3 nextDist = vec3(verticies[i]) - vec3(verticies[i+1]);
+        int precision = 5;
+        float currX = setFloatPrecision(verticies[i].x, precision);
+        float currY = setFloatPrecision(verticies[i].y, precision);
+        float nextX = setFloatPrecision(verticies[i+1].x, precision);
+        float nextY = setFloatPrecision(verticies[i+1].y, precision);
+        vec3 nextDist = vec3(currX, currY, 0.0f) - vec3(nextX, nextY, 0.0f);
+        if (i == 9){
+            cout << fixed << setprecision(20) 
+                << verticies[i].x << endl << verticies[i+1].x << endl
+                << nextDist.x << "  " << nextDist.y << endl;
+        }
+        /*if (nextDist.x >= -0.00000003f && nextDist.x < 0)  // floating point error
+            nextDist.x = 0;
+        if (nextDist.y >= -0.00000003f && nextDist.y < 0)  // floating point error
+            nextDist.y = 0;*/
+            
         if (isOrthogonal(nextDist, xAxis))
         {
-            direction = (verticies[i+1].x - verticies[i].x) 
-                    / abs(verticies[i+1].x - verticies[i].x);
-            
-            reUsedX = verticies[i].x;
-            reUsedY = verticies[i].y - offSet;
-            reUsedZ = verticies[i].z;
-
-            // coords from point-based hilbert curve
-            vert.push_back(verticies[i].x);
-            vert.push_back(verticies[i].y + offSet);
-            vert.push_back(verticies[i].z);
-            
-            vert.push_back(verticies[i].x);
-            vert.push_back(verticies[i].y - offSet);
-            vert.push_back(verticies[i].z);
-
-            // coords of next point to complete the triangle
-            vert.push_back(verticies[i+1].x + offSet * direction);
-            vert.push_back(verticies[i+1].y + offSet);
-            vert.push_back(verticies[i+1].z);
-        }
-        else 
-        {
             direction = (verticies[i+1].y - verticies[i].y) 
-            / abs(verticies[i+1].y - verticies[i].y);
-
+                    / abs(verticies[i+1].y - verticies[i].y);
+            
             reUsedX = verticies[i].x - offSet;
             reUsedY = verticies[i].y;
             reUsedZ = verticies[i].z;
 
+            // coords from point-based hilbert curve
+            vert.push_back(verticies[i].x - offSet);
+            vert.push_back(verticies[i].y);
+            vert.push_back(verticies[i].z);
+            
             vert.push_back(verticies[i].x + offSet);
             vert.push_back(verticies[i].y);
             vert.push_back(verticies[i].z);
 
-            vert.push_back(verticies[i].x - offSet);
-            vert.push_back(verticies[i].y);
-            vert.push_back(verticies[i].z);
-        
             // coords of next point to complete the triangle
             vert.push_back(verticies[i+1].x + offSet);
             vert.push_back(verticies[i+1].y + offSet * direction);
             vert.push_back(verticies[i+1].z);
         }
+        else // parallel to x-axis
+        {
+            direction = (verticies[i+1].x - verticies[i].x) 
+            / abs(verticies[i+1].x - verticies[i].x);
 
+            reUsedX = verticies[i].x;
+            reUsedY = verticies[i].y - offSet;
+            reUsedZ = verticies[i].z;
+
+            vert.push_back(verticies[i].x);
+            vert.push_back(verticies[i].y + offSet);
+            vert.push_back(verticies[i].z);
+
+            vert.push_back(verticies[i].x);
+            vert.push_back(verticies[i].y - offSet);
+            vert.push_back(verticies[i].z);
+        
+            // coords of next point to complete the triangle
+            vert.push_back(verticies[i+1].x + offSet * direction);
+            vert.push_back(verticies[i+1].y + offSet);
+            vert.push_back(verticies[i+1].z);
+        }
+
+        if (i == verticies.size() - 2)  // second last 
+        {
+            prevDist = vec3(verticies[i+1] - verticies[i]);
+            if (isOrthogonal(prevDist, xAxis))
+            {
+                direction = (verticies[i+1].y - verticies[i].y) 
+                / abs(verticies[i+1].y - verticies[i].y);
+
+                vert.push_back(verticies[i+1].x + offSet);
+                vert.push_back(verticies[i+1].y + offSet * direction);
+                vert.push_back(verticies[i+1].z);
+
+                 // coords from point-based hilbert curve
+                vert.push_back(verticies[i+1].x - offSet);
+                vert.push_back(verticies[i+1].y + offSet * direction);
+                vert.push_back(verticies[i+1].z);
+            }
+            else // is parallel to x-axis
+            {
+                direction = (verticies[i+1].x - verticies[i].x) 
+                / abs(verticies[i+1].x - verticies[i].x);
+
+                 // coords from point-based hilbert curve
+                vert.push_back(verticies[i+1].x + offSet * direction);
+                vert.push_back(verticies[i+1].y + offSet);
+                vert.push_back(verticies[i+1].z);
+
+                vert.push_back(verticies[i+1].x + offSet * direction);
+                vert.push_back(verticies[i+1].y - offSet);
+                vert.push_back(verticies[i+1].z);
+            }
+
+            // 3rd point to complete the traingle and makes a rectangle
+            vert.push_back(reUsedX);
+            vert.push_back(reUsedY);
+            vert.push_back(reUsedZ);
+        }
     }
     return vert;
 }
@@ -204,7 +257,16 @@ void HilbertCurveGen::decreaseLevel()
 */
 void HilbertCurveGen::hilbert(vector<vec4> &curve,  int n)
 {
-    if (n<= 0) { return; }    
+    if (n<= 0) // deal with floating point rounding errors 
+    { 
+        /*int precision = 4;
+        for (auto &vec : verticies)
+        {
+            vec.x = setFloatPrecision(vec.x, precision);
+            vec.y = setFloatPrecision(vec.y, precision);
+        }*/
+        return; 
+    }    
     else
     {
         vector<vec4> lowerLeftCurve;
@@ -231,11 +293,20 @@ void HilbertCurveGen::hilbert(vector<vec4> &curve,  int n)
 
 bool HilbertCurveGen::isOrthogonal(vec3 x, vec3 y)
 {
-    return dot(x, y);
+    if (dot(x, y) == 0) return true;
+    return false;
 }
 
 void HilbertCurveGen::setMaxLevel(int width, int height)
 {
     float area = width * height;
     maxLevel = (1 / 2.0f) * (log(area) / log(2));
+}
+
+float HilbertCurveGen::setFloatPrecision(float x, int precision)
+{
+    int val = x * pow(10, precision);
+    val = round(val);
+    float prec = val / pow(10, precision);
+    return prec;
 }

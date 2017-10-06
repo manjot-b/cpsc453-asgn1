@@ -110,6 +110,7 @@ int main()
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
+	glfwSetWindowAspectRatio(window, 1, 1);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{

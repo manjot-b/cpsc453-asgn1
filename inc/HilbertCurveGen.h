@@ -26,7 +26,7 @@ class HilbertCurveGen
         void calcCurve(int level);
         void hilbert(std::vector<glm::vec4> &verticies, int n);
         bool isOrthogonal(glm::vec3 x, glm::vec3 y);
-
+        float setFloatPrecision(float x, int precision);
         
 };
 

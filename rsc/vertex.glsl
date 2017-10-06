@@ -7,5 +7,5 @@ uniform mat4 transform;
 void main()
 {
 	gl_Position = vec4(aPos, 1.0);
-	vertexColor = vec4(aColor, 1.0);
+	vertexColor = vec4(aPos, 1.0);
 }
