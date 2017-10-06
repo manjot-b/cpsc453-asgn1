@@ -63,24 +63,28 @@ vector<float> HilbertCurveGen::getPointVerticies()
 
 vector<float> HilbertCurveGen::getTriangleVerticies()
 {
-    vector<float> vert;
+    vector<float> vert;	// will hold the verticies of the triangle
     vec3 xAxis(1.0f, 0.0f, 0.0f);
-    float offSet = 0.02f;
+    float offSet = 0.02f;	// size of rectangle away from the vertex on each side
     float reUsedX;
     float reUsedY;
     float reUsedZ;
 
     // will return a triangles that form rectangles
-    // such that the hilbert line passes through the
+    // such that each line is encompased in the
     // center of the rectangle
     for (int i = 0; i < verticies.size() - 1; i++)
     {
-        vec3 prevDist;
+        vec3 prevDist;	// used to see if line between verticies is horizontal or vertical
         int direction;  // -1 means left/down, +1 means right/up
+		int precision = 4;	// used to set the precision of floats
 
-        if (i > 0)
+		// gets the trianglef rom the current vertex to the previous one
+        if (i > 0 || i == verticies.size() - 2)
         {
             prevDist = vec3(verticies[i] - verticies[i-1]);
+			prevDist.x = setFloatPrecision(prevDist.x, precision);
+			prevDist.y = setFloatPrecision(prevDist.y, precision);
             if (isOrthogonal(prevDist, xAxis))
             {
                 direction = (verticies[i].y - verticies[i-1].y) 
@@ -121,22 +125,13 @@ vector<float> HilbertCurveGen::getTriangleVerticies()
 
         // check to see if the line is horizontal or vertical
         // so we know where to put the trianlgle verticies
-        int precision = 5;
-        float currX = setFloatPrecision(verticies[i].x, precision);
-        float currY = setFloatPrecision(verticies[i].y, precision);
-        float nextX = setFloatPrecision(verticies[i+1].x, precision);
-        float nextY = setFloatPrecision(verticies[i+1].y, precision);
-        vec3 nextDist = vec3(currX, currY, 0.0f) - vec3(nextX, nextY, 0.0f);
-        if (i == 9){
-            cout << fixed << setprecision(20) 
-                << verticies[i].x << endl << verticies[i+1].x << endl
-                << nextDist.x << "  " << nextDist.y << endl;
-        }
-        /*if (nextDist.x >= -0.00000003f && nextDist.x < 0)  // floating point error
-            nextDist.x = 0;
-        if (nextDist.y >= -0.00000003f && nextDist.y < 0)  // floating point error
-            nextDist.y = 0;*/
+    	vec3 nextDist = vec3(verticies[i].x, verticies[i].y, verticies[i].z) -
+			vec3(verticies[i + 1].x, verticies[i + 1].y, verticies[i + 1].z);
+		nextDist.x = setFloatPrecision(nextDist.x, precision);
+		nextDist.y = setFloatPrecision(nextDist.y, precision);
             
+		// draws a triangle from the currnt vertex to the
+		// next vertex
         if (isOrthogonal(nextDist, xAxis))
         {
             direction = (verticies[i+1].y - verticies[i].y) 
@@ -183,9 +178,13 @@ vector<float> HilbertCurveGen::getTriangleVerticies()
             vert.push_back(verticies[i+1].z);
         }
 
-        if (i == verticies.size() - 2)  // second last 
+		// on second last point, so draw the triangle
+		// from the last point to the current point
+        if (i == verticies.size() - 2) 
         {
             prevDist = vec3(verticies[i+1] - verticies[i]);
+			prevDist.x = setFloatPrecision(prevDist.x, precision);
+			prevDist.y = setFloatPrecision(prevDist.y, precision);
             if (isOrthogonal(prevDist, xAxis))
             {
                 direction = (verticies[i+1].y - verticies[i].y) 
@@ -251,29 +250,17 @@ void HilbertCurveGen::decreaseLevel()
     hilbert(verticies, level-1);    // calc from level 1 up to new current level
 }
 
-/*
-    Will return in curve the new verticies that are n levels
-    above it
-*/
+
 void HilbertCurveGen::hilbert(vector<vec4> &curve,  int n)
 {
-    if (n<= 0) // deal with floating point rounding errors 
-    { 
-        /*int precision = 4;
-        for (auto &vec : verticies)
-        {
-            vec.x = setFloatPrecision(vec.x, precision);
-            vec.y = setFloatPrecision(vec.y, precision);
-        }*/
-        return; 
-    }    
+    if (n<= 0) { return; }    
     else
     {
         vector<vec4> lowerLeftCurve;
         vector<vec4> upperLeftCurve;
         vector<vec4> upperRightCurve;
         vector<vec4> lowerRightCurve;        
-        for (const auto &v : curve) // translate every vertex and place in proper vector
+        for (const auto &v : curve) // transform every vertex and place in proper vector
         {
             lowerLeftCurve.push_back(lowerLeftTrans * v);
             upperLeftCurve.push_back(upperLeftTrans * v);
